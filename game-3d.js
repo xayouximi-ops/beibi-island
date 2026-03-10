@@ -18,38 +18,61 @@ let playerPosition = { x: 0, z: 0 };
 function initThree() {
     console.log('Initializing Three.js...');
 
+    // 获取容器
+    const container = document.getElementById('canvas-container');
+    if (!container) {
+        throw new Error('找不到 canvas-container 元素');
+    }
+
+    // 清空容器
+    container.innerHTML = '';
+
     // 创建场景
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x87CEEB);
     scene.fog = new THREE.Fog(0x87CEEB, 50, 200);
+    console.log('Scene created');
 
     // 创建相机
     camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.set(0, 15, 25);
     camera.lookAt(0, 0, 0);
+    console.log('Camera created at:', camera.position);
 
     // 创建渲染器
-    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
+        preserveDrawingBuffer: true
+    });
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
-    document.getElementById('canvas-container').appendChild(renderer.domElement);
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-    console.log('Three.js initialized');
+    // 添加渲染器到 DOM
+    container.appendChild(renderer.domElement);
+    console.log('Renderer created, size:', window.innerWidth, 'x', window.innerHeight);
 
     // 添加光源
     addLights();
+    console.log('Lights added');
 
     // 创建岛屿
     createIsland();
+    console.log('Island created');
 
     // 创建玩家
     createPlayer();
+    console.log('Player created at:', player.position);
 
     // 添加装饰物
     createDecorations();
+    console.log('Decorations created, count:', decorations.length);
 
     // 窗口大小调整
-    window.addEventListener('resize', onWindowResize);
+    window.addEventListener('resize', onWindowResize, false);
+    console.log('Resize listener added');
 
     // 鼠标控制相机
     setupCameraControl();
@@ -63,7 +86,7 @@ function initThree() {
     // 更新加载进度
     updateLoadingProgress(100);
 
-    console.log('Keyboard control enabled (WASD)');
+    console.log('✅ Three.js initialization complete!');
 }
 
 function addLights() {
@@ -700,6 +723,21 @@ function clearData() {
 window.addEventListener('load', () => {
     console.log('Page loaded, starting game...');
 
+    // 检查 Three.js 是否加载成功
+    if (typeof THREE === 'undefined') {
+        console.error('Three.js 加载失败！');
+        document.getElementById('loading-screen').innerHTML = `
+            <div style="color: white; text-align: center; padding: 20px;">
+                <h2>❌ Three.js 加载失败</h2>
+                <p>请检查网络连接或使用支持 WebGL 的浏览器</p>
+                <button onclick="location.reload()" style="padding: 10px 20px; margin-top: 20px; cursor: pointer;">重试</button>
+            </div>
+        `;
+        return;
+    }
+
+    console.log('Three.js version:', THREE.REVISION);
+
     // 模拟加载
     let progress = 0;
     const loadInterval = setInterval(() => {
@@ -709,11 +747,23 @@ window.addEventListener('load', () => {
         if (progress >= 100) {
             clearInterval(loadInterval);
             setTimeout(() => {
-                initThree();
-                setTimeout(() => {
-                    document.getElementById('loading-screen').style.display = 'none';
-                    document.getElementById('login-screen').style.display = 'flex';
-                }, 500);
+                try {
+                    initThree();
+                    setTimeout(() => {
+                        document.getElementById('loading-screen').style.display = 'none';
+                        document.getElementById('login-screen').style.display = 'flex';
+                        console.log('Game started successfully!');
+                    }, 500);
+                } catch (error) {
+                    console.error('初始化 3D 场景失败:', error);
+                    document.getElementById('loading-screen').innerHTML = `
+                        <div style="color: white; text-align: center; padding: 20px;">
+                            <h2>❌ 初始化失败</h2>
+                            <p>${error.message}</p>
+                            <button onclick="location.reload()" style="padding: 10px 20px; margin-top: 20px; cursor: pointer;">重试</button>
+                        </div>
+                    `;
+                }
             }, 500);
         }
     }, 200);
