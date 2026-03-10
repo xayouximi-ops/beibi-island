@@ -273,8 +273,11 @@ function animate() {
 let isDragging = false;
 let previousMousePosition = { x: 0, y: 0 };
 let cameraAngle = 0;
-let cameraDistance = 30;
-let cameraHeight = 15;
+let cameraDistance = 20;
+let cameraHeight = 12;
+
+// 相机平滑跟随
+let smoothCameraPosition = { x: 0, y: 0, z: 0 };
 
 function setupCameraControl() {
     const canvas = renderer.domElement;
@@ -291,7 +294,7 @@ function setupCameraControl() {
         const deltaY = e.clientY - previousMousePosition.y;
 
         cameraAngle -= deltaX * 0.01;
-        cameraHeight = Math.max(5, Math.min(30, cameraHeight - deltaY * 0.1));
+        cameraHeight = Math.max(5, Math.min(25, cameraHeight - deltaY * 0.1));
 
         updateCameraPosition();
 
@@ -303,7 +306,7 @@ function setupCameraControl() {
     });
 
     canvas.addEventListener('wheel', (e) => {
-        cameraDistance = Math.max(10, Math.min(50, cameraDistance + e.deltaY * 0.05));
+        cameraDistance = Math.max(10, Math.min(40, cameraDistance + e.deltaY * 0.05));
         updateCameraPosition();
     });
 
@@ -311,10 +314,22 @@ function setupCameraControl() {
 }
 
 function updateCameraPosition() {
-    camera.position.x = Math.sin(cameraAngle) * cameraDistance;
-    camera.position.z = Math.cos(cameraAngle) * cameraDistance;
-    camera.position.y = cameraHeight;
-    camera.lookAt(0, 0, 0);
+    // 相机位置基于玩家位置和角度
+    const targetX = playerPosition.x + Math.sin(cameraAngle) * cameraDistance;
+    const targetZ = playerPosition.z + Math.cos(cameraAngle) * cameraDistance;
+    const targetY = cameraHeight;
+
+    // 平滑跟随
+    smoothCameraPosition.x += (targetX - smoothCameraPosition.x) * 0.1;
+    smoothCameraPosition.z += (targetZ - smoothCameraPosition.z) * 0.1;
+    smoothCameraPosition.y += (targetY - smoothCameraPosition.y) * 0.1;
+
+    camera.position.x = smoothCameraPosition.x;
+    camera.position.z = smoothCameraPosition.z;
+    camera.position.y = smoothCameraPosition.y;
+
+    // 相机看向玩家
+    camera.lookAt(playerPosition.x, playerPosition.y + 2, playerPosition.z);
 }
 
 // ==================== 玩家控制 ====================
@@ -348,7 +363,7 @@ window.addEventListener('keyup', (e) => {
 // 键盘控制更新
 function updateKeyboardMovement() {
     const speed = 0.5;
-    const rotateSpeed = 0.08;
+    const strafeSpeed = 0.4;
 
     if (keys.w) {
         // 前进
@@ -361,12 +376,14 @@ function updateKeyboardMovement() {
         playerPosition.z += Math.cos(playerRotation) * speed;
     }
     if (keys.a) {
-        // 左转
-        playerRotation += rotateSpeed;
+        // 向左平移
+        playerPosition.x -= Math.cos(playerRotation) * strafeSpeed;
+        playerPosition.z += Math.sin(playerRotation) * strafeSpeed;
     }
     if (keys.d) {
-        // 右转
-        playerRotation -= rotateSpeed;
+        // 向右平移
+        playerPosition.x += Math.cos(playerRotation) * strafeSpeed;
+        playerPosition.z -= Math.sin(playerRotation) * strafeSpeed;
     }
 
     // 更新玩家位置
@@ -374,7 +391,7 @@ function updateKeyboardMovement() {
     player.position.z = playerPosition.z;
     player.rotation.y = playerRotation;
 
-    // 更新相机位置
+    // 更新相机位置（跟随玩家）
     updateCameraPosition();
 
     // 继续调用
@@ -395,6 +412,24 @@ function moveBackward() {
     const speed = 0.5;
     playerPosition.x += Math.sin(playerRotation) * speed;
     playerPosition.z += Math.cos(playerRotation) * speed;
+    player.position.x = playerPosition.x;
+    player.position.z = playerPosition.z;
+    updateCameraPosition();
+}
+
+function strafeLeft() {
+    const strafeSpeed = 0.4;
+    playerPosition.x -= Math.cos(playerRotation) * strafeSpeed;
+    playerPosition.z += Math.sin(playerRotation) * strafeSpeed;
+    player.position.x = playerPosition.x;
+    player.position.z = playerPosition.z;
+    updateCameraPosition();
+}
+
+function strafeRight() {
+    const strafeSpeed = 0.4;
+    playerPosition.x += Math.cos(playerRotation) * strafeSpeed;
+    playerPosition.z -= Math.sin(playerRotation) * strafeSpeed;
     player.position.x = playerPosition.x;
     player.position.z = playerPosition.z;
     updateCameraPosition();
