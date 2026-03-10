@@ -54,11 +54,16 @@ function initThree() {
     // 鼠标控制相机
     setupCameraControl();
 
+    // 键盘控制
+    updateKeyboardMovement();
+
     // 开始渲染循环
     animate();
 
     // 更新加载进度
     updateLoadingProgress(100);
+
+    console.log('Keyboard control enabled (WASD)');
 }
 
 function addLights() {
@@ -314,6 +319,69 @@ function updateCameraPosition() {
 
 // ==================== 玩家控制 ====================
 
+// 键盘状态
+const keys = {
+    w: false,
+    a: false,
+    s: false,
+    d: false
+};
+
+// 键盘事件监听
+window.addEventListener('keydown', (e) => {
+    const key = e.key.toLowerCase();
+    if (key === 'w') keys.w = true;
+    if (key === 's') keys.s = true;
+    if (key === 'a') keys.a = true;
+    if (key === 'd') keys.d = true;
+    if (key === 'e') interact(); // E 键互动
+});
+
+window.addEventListener('keyup', (e) => {
+    const key = e.key.toLowerCase();
+    if (key === 'w') keys.w = false;
+    if (key === 's') keys.s = false;
+    if (key === 'a') keys.a = false;
+    if (key === 'd') keys.d = false;
+});
+
+// 键盘控制更新
+function updateKeyboardMovement() {
+    const speed = 0.5;
+    const rotateSpeed = 0.08;
+
+    if (keys.w) {
+        // 前进
+        playerPosition.x -= Math.sin(playerRotation) * speed;
+        playerPosition.z -= Math.cos(playerRotation) * speed;
+    }
+    if (keys.s) {
+        // 后退
+        playerPosition.x += Math.sin(playerRotation) * speed;
+        playerPosition.z += Math.cos(playerRotation) * speed;
+    }
+    if (keys.a) {
+        // 左转
+        playerRotation += rotateSpeed;
+    }
+    if (keys.d) {
+        // 右转
+        playerRotation -= rotateSpeed;
+    }
+
+    // 更新玩家位置
+    player.position.x = playerPosition.x;
+    player.position.z = playerPosition.z;
+    player.rotation.y = playerRotation;
+
+    // 更新相机位置
+    updateCameraPosition();
+
+    // 继续调用
+    requestAnimationFrame(updateKeyboardMovement);
+}
+
+// 原有的按钮控制函数（保留）
 function moveForward() {
     const speed = 0.5;
     playerPosition.x -= Math.sin(playerRotation) * speed;
