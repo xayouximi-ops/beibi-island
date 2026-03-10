@@ -1,0 +1,658 @@
+/* 基础样式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Microsoft YaHei', Arial, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+.screen {
+    display: none;
+    width: 100%;
+    height: 100vh;
+}
+
+.screen.active {
+    display: block;
+}
+
+/* 登录界面 */
+#login-screen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-container {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+}
+
+.game-logo {
+    font-size: 3em;
+    color: #667eea;
+    margin-bottom: 10px;
+}
+
+.game-subtitle {
+    color: #888;
+    margin-bottom: 30px;
+}
+
+.character-creator h3 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.character-preview {
+    margin: 20px 0;
+}
+
+.avatar-preview {
+    font-size: 5em;
+    background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.creator-options {
+    text-align: left;
+    margin: 20px 0;
+}
+
+.option-group {
+    margin-bottom: 15px;
+}
+
+.option-group label {
+    display: block;
+    color: #666;
+    margin-bottom: 5px;
+    font-size: 0.9em;
+}
+
+.option-group input {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 1em;
+}
+
+.gender-select, .style-selector, .color-selector {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.gender-btn, .style-selector button, .color-btn {
+    padding: 8px 15px;
+    border: 2px solid #ddd;
+    background: white;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.gender-btn.active, .style-selector button:hover {
+    border-color: #667eea;
+    background: #667eea;
+    color: white;
+}
+
+.color-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    padding: 0;
+}
+
+.color-btn:hover {
+    transform: scale(1.1);
+}
+
+.start-btn {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.2em;
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+
+.start-btn:hover {
+    transform: scale(1.05);
+}
+
+/* 游戏主界面 */
+.top-bar {
+    background: white;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.player-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: bold;
+}
+
+#display-avatar {
+    font-size: 1.5em;
+}
+
+.level-badge {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 3px 10px;
+    border-radius: 15px;
+    font-size: 0.8em;
+}
+
+.resources {
+    display: flex;
+    gap: 15px;
+}
+
+.resource {
+    font-weight: bold;
+    color: #333;
+}
+
+.main-content {
+    display: flex;
+    height: calc(100vh - 60px);
+}
+
+.side-nav {
+    width: 120px;
+    background: white;
+    padding: 20px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.nav-btn {
+    padding: 15px 10px;
+    background: #f5f5f5;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 0.9em;
+}
+
+.nav-btn.active, .nav-btn:hover {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+}
+
+.content-area {
+    flex: 1;
+    background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.page {
+    display: none;
+}
+
+.page.active {
+    display: block;
+}
+
+/* 家园页面 */
+.home-container {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    height: 100%;
+}
+
+.island-view {
+    height: 300px;
+    background: linear-gradient(180deg, #87CEEB 0%, #98FB98 50%, #DEB887 100%);
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.island-background {
+    font-size: 8em;
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.island-decorations {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+}
+
+.player-on-island {
+    font-size: 3em;
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    transition: all 0.3s;
+}
+
+.home-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.home-actions button {
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* 小镇页面 */
+.town-container h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #333;
+}
+
+.town-buildings {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.building {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.building:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.building-icon {
+    font-size: 3em;
+    margin-bottom: 10px;
+}
+
+.building-name {
+    font-weight: bold;
+    color: #333;
+}
+
+/* 换装页面 */
+.wardrobe-container {
+    display: flex;
+    gap: 30px;
+}
+
+.wardrobe-preview {
+    width: 200px;
+    text-align: center;
+}
+
+.avatar-large {
+    font-size: 8em;
+    background: white;
+    border-radius: 50%;
+    width: 180px;
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+}
+
+.avatar-name {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #333;
+}
+
+.wardrobe-items {
+    flex: 1;
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+}
+
+.item-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-top: 20px;
+}
+
+/* 宠物页面 */
+.pets-container h2 {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.pet-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    max-width: 800px;
+    margin: 0 auto 30px;
+}
+
+.pet-card {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    text-align: center;
+}
+
+.pet-icon {
+    font-size: 4em;
+    margin-bottom: 10px;
+}
+
+.pet-name {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.pet-level {
+    color: #888;
+    font-size: 0.9em;
+}
+
+.pet-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.pet-actions button {
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* 好友页面 */
+.friends-container h2 {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.friend-list {
+    max-width: 600px;
+    margin: 0 auto 30px;
+}
+
+.friend-item {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.friend-avatar {
+    font-size: 2.5em;
+}
+
+.friend-info {
+    flex: 1;
+}
+
+.friend-name {
+    font-weight: bold;
+}
+
+.friend-level {
+    color: #888;
+    font-size: 0.9em;
+}
+
+.friend-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.friend-actions button {
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* 任务页面 */
+.quests-container h2 {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.quest-list {
+    max-width: 600px;
+    margin: 0 auto 30px;
+}
+
+.quest-item {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+}
+
+.quest-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.quest-name {
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.quest-reward {
+    color: #f39c12;
+    font-weight: bold;
+}
+
+.quest-desc {
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.quest-progress {
+    background: #f5f5f5;
+    height: 10px;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.quest-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    transition: width 0.3s;
+}
+
+.quest-claim {
+    text-align: center;
+}
+
+.quest-claim button {
+    padding: 15px 40px;
+    background: linear-gradient(135deg, #f39c12, #e67e22);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.1em;
+    cursor: pointer;
+}
+
+/* 小游戏界面 */
+.minigame-header {
+    background: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.minigame-header button {
+    padding: 8px 15px;
+    background: #f5f5f5;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.minigame-container {
+    height: calc(100vh - 70px);
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 弹窗 */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+}
+
+.modal-content h3 {
+    color: #667eea;
+    margin-bottom: 20px;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.modal-buttons button {
+    padding: 10px 30px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* 通知 */
+.notification {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    padding: 15px 30px;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    z-index: 2000;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+    .main-content {
+        flex-direction: column;
+    }
+
+    .side-nav {
+        width: 100%;
+        flex-direction: row;
+        padding: 10px;
+        overflow-x: auto;
+    }
+
+    .town-buildings {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .pet-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

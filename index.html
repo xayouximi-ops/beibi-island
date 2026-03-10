@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>贝比岛 - 我的梦幻小岛</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- 登录/创建角色界面 -->
+    <div id="login-screen" class="screen active">
+        <div class="login-container">
+            <h1 class="game-logo">🏝️ 贝比岛</h1>
+            <p class="game-subtitle">创造你的梦幻小岛</p>
+
+            <div class="character-creator">
+                <h3>创建你的角色</h3>
+                <div class="character-preview">
+                    <div id="preview-avatar" class="avatar-preview">👧</div>
+                </div>
+
+                <div class="creator-options">
+                    <div class="option-group">
+                        <label>昵称</label>
+                        <input type="text" id="player-name" placeholder="输入你的名字" maxlength="8">
+                    </div>
+
+                    <div class="option-group">
+                        <label>性别</label>
+                        <div class="gender-select">
+                            <button class="gender-btn active" data-gender="female" onclick="setGender('female')">👧 女孩</button>
+                            <button class="gender-btn" data-gender="male" onclick="setGender('male')">👦 男孩</button>
+                        </div>
+                    </div>
+
+                    <div class="option-group">
+                        <label>发型</label>
+                        <div class="style-selector">
+                            <button onclick="setHair('🧑')">🧑</button>
+                            <button onclick="setHair('👨')">👨</button>
+                            <button onclick="setHair('👩')">👩</button>
+                            <button onclick="setHair('👱')">👱</button>
+                            <button onclick="setHair('👴')">👴</button>
+                            <button onclick="setHair('👵')">👵</button>
+                        </div>
+                    </div>
+
+                    <div class="option-group">
+                        <label>服装颜色</label>
+                        <div class="color-selector">
+                            <button class="color-btn" style="background: #ff6b6b" onclick="setColor('#ff6b6b')"></button>
+                            <button class="color-btn" style="background: #4ecdc4" onclick="setColor('#4ecdc4')"></button>
+                            <button class="color-btn" style="background: #45b7d1" onclick="setColor('#45b7d1')"></button>
+                            <button class="color-btn" style="background: #f9ca24" onclick="setColor('#f9ca24')"></button>
+                            <button class="color-btn" style="background: #6c5ce7" onclick="setColor('#6c5ce7')"></button>
+                            <button class="color-btn" style="background: #fd79a8" onclick="setColor('#fd79a8')"></button>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="start-btn" onclick="startGame()">🏝️ 开始冒险</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主游戏界面 -->
+    <div id="game-screen" class="screen">
+        <!-- 顶部信息栏 -->
+        <div class="top-bar">
+            <div class="player-info">
+                <span id="display-avatar">👧</span>
+                <span id="display-name">玩家</span>
+                <span class="level-badge">Lv.<span id="player-level">1</span></span>
+            </div>
+            <div class="resources">
+                <span class="resource">💰 <span id="coin-display">0</span></span>
+                <span class="resource">💎 <span id="gem-display">0</span></span>
+                <span class="resource">⭐ <span id="exp-display">0</span></span>
+            </div>
+        </div>
+
+        <!-- 主界面 -->
+        <div class="main-content">
+            <!-- 左侧导航 -->
+            <div class="side-nav">
+                <button class="nav-btn active" onclick="showPage('home')">🏠 家园</button>
+                <button class="nav-btn" onclick="showPage('town')">🏪 小镇</button>
+                <button class="nav-btn" onclick="showPage('wardrobe')">👗 换装</button>
+                <button class="nav-btn" onclick="showPage('pets')">🐾 宠物</button>
+                <button class="nav-btn" onclick="showPage('friends')">👥 好友</button>
+                <button class="nav-btn" onclick="showPage('quests')">📋 任务</button>
+            </div>
+
+            <!-- 内容区域 -->
+            <div class="content-area">
+                <!-- 家园页面 -->
+                <div id="page-home" class="page active">
+                    <div class="home-container">
+                        <div class="island-view">
+                            <div class="island-background">🏝️</div>
+                            <div id="island-decorations" class="island-decorations">
+                                <!-- 装饰物会动态添加 -->
+                            </div>
+                            <div class="player-on-island" id="player-on-island">👧</div>
+                        </div>
+                        <div class="home-actions">
+                            <button onclick="decorateIsland()">🎨 装饰岛屿</button>
+                            <button onclick="visitFriend()">🚶 拜访好友</button>
+                            <button onclick="rest()">💤 休息 (+体力)</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 小镇页面 -->
+                <div id="page-town" class="page">
+                    <div class="town-container">
+                        <h2>🏪 中心小镇</h2>
+                        <div class="town-buildings">
+                            <div class="building" onclick="openShop('pet')">
+                                <div class="building-icon">🐾</div>
+                                <div class="building-name">宠物店</div>
+                            </div>
+                            <div class="building" onclick="openShop('furniture')">
+                                <div class="building-icon">🪑</div>
+                                <div class="building-name">家具店</div>
+                            </div>
+                            <div class="building" onclick="openShop('clothes')">
+                                <div class="building-icon">👕</div>
+                                <div class="building-name">服装店</div>
+                            </div>
+                            <div class="building" onclick="openMiniGames()">
+                                <div class="building-icon">🎮</div>
+                                <div class="building-name">游戏厅</div>
+                            </div>
+                            <div class="building" onclick="openFarm()">
+                                <div class="building-icon">🌾</div>
+                                <div class="building-name">农场</div>
+                            </div>
+                            <div class="building" onclick="openBank()">
+                                <div class="building-icon">🏦</div>
+                                <div class="building-name">银行</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 换装页面 -->
+                <div id="page-wardrobe" class="page">
+                    <div class="wardrobe-container">
+                        <div class="wardrobe-preview">
+                            <div id="wardrobe-avatar" class="avatar-large">👧</div>
+                            <div class="avatar-name" id="wardrobe-name">玩家</div>
+                        </div>
+                        <div class="wardrobe-items">
+                            <h3>我的服装</h3>
+                            <div id="clothing-list" class="item-grid">
+                                <!-- 服装列表动态生成 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 宠物页面 -->
+                <div id="page-pets" class="page">
+                    <div class="pets-container">
+                        <h2>🐾 我的宠物</h2>
+                        <div id="pet-list" class="pet-grid">
+                            <!-- 宠物列表动态生成 -->
+                        </div>
+                        <div class="pet-actions">
+                            <button onclick="feedPet()">🍖 喂食</button>
+                            <button onclick="playWithPet()">🎾 玩耍</button>
+                            <button onclick="petShop()">🏪 宠物店</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 好友页面 -->
+                <div id="page-friends" class="page">
+                    <div class="friends-container">
+                        <h2>👥 好友列表</h2>
+                        <div id="friend-list" class="friend-list">
+                            <!-- 好友列表动态生成 -->
+                        </div>
+                        <div class="friend-actions">
+                            <button onclick="addFriend()">➕ 添加好友</button>
+                            <button onclick="visitRandomFriend()">🚶 随机拜访</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 任务页面 -->
+                <div id="page-quests" class="page">
+                    <div class="quests-container">
+                        <h2>📋 任务列表</h2>
+                        <div id="quest-list" class="quest-list">
+                            <!-- 任务列表动态生成 -->
+                        </div>
+                        <div class="quest-claim">
+                            <button onclick="claimDailyReward()">🎁 领取每日奖励</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 小游戏界面 -->
+    <div id="minigame-screen" class="screen">
+        <div class="minigame-header">
+            <button onclick="backToGame()">← 返回</button>
+            <h3 id="minigame-title">小游戏</h3>
+            <span>奖励：💰 <span id="minigame-reward">100</span></span>
+        </div>
+        <div id="minigame-container" class="minigame-container">
+            <!-- 小游戏内容动态加载 -->
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
