@@ -443,16 +443,27 @@ function setGender(gender) {
 }
 
 function startGame() {
-    const name = document.getElementById('player-name').value.trim();
+    console.log('Start game clicked!');
+
+    const nameInput = document.getElementById('player-name');
+    const name = nameInput ? nameInput.value.trim() : '';
     if (name) playerName = name;
+
+    console.log('Player name:', playerName, 'Gender:', playerGender);
 
     game3DState = new GameState3D();
     game3DState.player.name = playerName;
     game3DState.player.gender = playerGender;
     game3DState.save();
 
-    document.getElementById('login-screen').classList.remove('active');
-    document.getElementById('ui-overlay').style.display = 'block';
+    console.log('Game state saved');
+
+    const loginScreen = document.getElementById('login-screen');
+    const uiOverlay = document.getElementById('ui-overlay');
+
+    if (loginScreen) loginScreen.classList.remove('active');
+    if (uiOverlay) uiOverlay.style.display = 'block';
+
     updateUI();
 
     showNotification(`🏝️ 欢迎来到贝比岛 3D, ${playerName}!`);
