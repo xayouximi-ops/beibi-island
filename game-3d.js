@@ -12,129 +12,121 @@ let playerGender = 'female';
 let playerName = '玩家';
 let playerRotation = 0;
 let playerPosition = { x: 0, z: 0 };
+let game3DState;
+
+// ==================== 游戏状态管理 ====================
+
+class GameState3D {
+    constructor() {
+        this.load();
+    }
+
+    load() {
+        const saved = localStorage.getItem('beibi3dSave');
+        if (saved) {
+            this.player = data.player || {
+                name: '玩家',
+                gender: 'female',
+                level: 1,
+                exp: 0,
+                coins: 1000,
+                gems: 100
+            };
+        } else {
+            this.player = {
+                name: '玩家',
+                gender: 'female',
+                level: 1,
+                exp: 0,
+                coins: 1000,
+                gems: 100
+            };
+        }
+    }
+
+    save() {
+        localStorage.setItem('beibi3dSave', JSON.stringify({
+            player: this.player
+        }));
+    }
+}
 
 // ==================== 初始化 Three.js ====================
 
 function initThree() {
     console.log('Initializing Three.js...');
 
-    // 获取容器
     const container = document.getElementById('canvas-container');
     if (!container) {
-        throw new Error('找不到 canvas-container 元素');
+        console.error('canvas-container not found!');
+        return;
     }
 
-    // 清空容器
     container.innerHTML = '';
 
-    // 创建场景
+    // 场景
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x87CEEB);
     scene.fog = new THREE.Fog(0x87CEEB, 50, 200);
-    console.log('Scene created');
 
-    // 创建相机
+    // 相机
     camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.set(0, 15, 25);
     camera.lookAt(0, 0, 0);
-    console.log('Camera created at:', camera.position);
 
-    // 创建渲染器
-    renderer = new THREE.WebGLRenderer({
-        antialias: true,
-        alpha: true,
-        preserveDrawingBuffer: true
-    });
+    // 渲染器
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
-    // 添加渲染器到 DOM
     container.appendChild(renderer.domElement);
-    console.log('Renderer created, size:', window.innerWidth, 'x', window.innerHeight);
 
-    // 添加光源
-    addLights();
-    console.log('Lights added');
-
-    // 创建岛屿
-    createIsland();
-    console.log('Island created');
-
-    // 创建玩家
-    createPlayer();
-    console.log('Player created at:', player.position);
-
-    // 添加装饰物
-    createDecorations();
-    console.log('Decorations created, count:', decorations.length);
-
-    // 窗口大小调整
-    window.addEventListener('resize', onWindowResize, false);
-    console.log('Resize listener added');
-
-    // 鼠标控制相机
-    setupCameraControl();
-
-    // 键盘控制
-    updateKeyboardMovement();
-
-    // 开始渲染循环
-    animate();
-
-    // 更新加载进度
-    updateLoadingProgress(100);
-
-    console.log('✅ Three.js initialization complete!');
-}
-
-function addLights() {
-    // 环境光
+    // 光源
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
     scene.add(ambientLight);
 
-    // 平行光（太阳光）
     const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
     directionalLight.position.set(50, 100, 50);
     directionalLight.castShadow = true;
-    directionalLight.shadow.mapSize.width = 2048;
-    directionalLight.shadow.mapSize.height = 2048;
     scene.add(directionalLight);
 
-    // 半球光
     const hemisphereLight = new THREE.HemisphereLight(0x87CEEB, 0x98FB98, 0.4);
     scene.add(hemisphereLight);
 
-    console.log('Lights added');
+    // 创建场景物体
+    createIsland();
+    createPlayer();
+    createDecorations();
+
+    // 事件监听
+    window.addEventListener('resize', onWindowResize, false);
+    setupCameraControl();
+    updateKeyboardMovement();
+
+    // 开始渲染
+    animate();
+
+    console.log('✅ Three.js ready!');
 }
 
 function createIsland() {
-    console.log('Creating island...');
-
-    // 创建岛屿地面
+    // 岛屿
     const islandGeometry = new THREE.CylinderGeometry(30, 35, 5, 8);
-    const islandMaterial = new THREE.MeshStandardMaterial({
-        color: 0x98FB98,
-        roughness: 0.8
-    });
+    const islandMaterial = new THREE.MeshStandardMaterial({ color: 0x98FB98, roughness: 0.8 });
     island = new THREE.Mesh(islandGeometry, islandMaterial);
     island.position.y = -2.5;
     island.receiveShadow = true;
     scene.add(island);
 
-    // 创建沙滩
+    // 沙滩
     const beachGeometry = new THREE.CylinderGeometry(32, 37, 1, 8);
-    const beachMaterial = new THREE.MeshStandardMaterial({
-        color: 0xDEB887,
-        roughness: 1
-    });
+    const beachMaterial = new THREE.MeshStandardMaterial({ color: 0xDEB887, roughness: 1 });
     const beach = new THREE.Mesh(beachGeometry, beachMaterial);
     beach.position.y = -0.5;
     beach.receiveShadow = true;
     scene.add(beach);
 
-    // 创建海洋
+    // 海洋
     const oceanGeometry = new THREE.PlaneGeometry(500, 500);
     const oceanMaterial = new THREE.MeshStandardMaterial({
         color: 0x1E90FF,
@@ -146,14 +138,9 @@ function createIsland() {
     ocean.rotation.x = -Math.PI / 2;
     ocean.position.y = -3;
     scene.add(ocean);
-
-    console.log('Island created');
 }
 
 function createPlayer() {
-    console.log('Creating player...');
-
-    // 创建简化的 3D 玩家角色
     const playerGroup = new THREE.Group();
 
     // 身体
@@ -187,44 +174,27 @@ function createPlayer() {
     player = playerGroup;
     player.position.set(0, 0, 0);
     scene.add(player);
-
-    console.log('Player created at position:', player.position);
 }
 
 function createDecorations() {
-    console.log('Creating decorations...');
-
-    // 创建树木
+    // 树木
     for (let i = 0; i < 5; i++) {
-        createTree(
-            Math.cos(i * Math.PI * 2 / 5) * 20,
-            Math.sin(i * Math.PI * 2 / 5) * 20
-        );
+        createTree(Math.cos(i * Math.PI * 2 / 5) * 20, Math.sin(i * Math.PI * 2 / 5) * 20);
     }
 
-    // 创建花朵
+    // 花朵
     for (let i = 0; i < 20; i++) {
-        createFlower(
-            (Math.random() - 0.5) * 40,
-            (Math.random() - 0.5) * 40
-        );
+        createFlower((Math.random() - 0.5) * 40, (Math.random() - 0.5) * 40);
     }
 
-    // 创建石头
+    // 石头
     for (let i = 0; i < 8; i++) {
-        createRock(
-            (Math.random() - 0.5) * 50,
-            (Math.random() - 0.5) * 50
-        );
+        createRock((Math.random() - 0.5) * 50, (Math.random() - 0.5) * 50);
     }
-
-    console.log('Decorations created, count:', decorations.length);
 }
 
 function createTree(x, z) {
     const treeGroup = new THREE.Group();
-
-    // 树干
     const trunkGeometry = new THREE.CylinderGeometry(0.3, 0.5, 3, 8);
     const trunkMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
     const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
@@ -232,7 +202,6 @@ function createTree(x, z) {
     trunk.castShadow = true;
     treeGroup.add(trunk);
 
-    // 树叶
     const leavesGeometry = new THREE.ConeGeometry(2, 4, 8);
     const leavesMaterial = new THREE.MeshStandardMaterial({ color: 0x228B22 });
     const leaves = new THREE.Mesh(leavesGeometry, leavesMaterial);
@@ -247,15 +216,12 @@ function createTree(x, z) {
 
 function createFlower(x, z) {
     const flowerGroup = new THREE.Group();
-
-    // 花茎
     const stemGeometry = new THREE.CylinderGeometry(0.05, 0.05, 0.5, 8);
     const stemMaterial = new THREE.MeshStandardMaterial({ color: 0x228B22 });
     const stem = new THREE.Mesh(stemGeometry, stemMaterial);
     stem.position.y = 0.25;
     flowerGroup.add(stem);
 
-    // 花瓣
     const petalGeometry = new THREE.SphereGeometry(0.2, 8, 8);
     const colors = [0xff69b4, 0xffd700, 0xff6347, 0x9370db, 0x00bfff];
     const petalMaterial = new THREE.MeshStandardMaterial({
@@ -298,8 +264,6 @@ let previousMousePosition = { x: 0, y: 0 };
 let cameraAngle = 0;
 let cameraDistance = 20;
 let cameraHeight = 12;
-
-// 相机平滑跟随
 let smoothCameraPosition = { x: 0, y: 0, z: 0 };
 
 function setupCameraControl() {
@@ -312,22 +276,13 @@ function setupCameraControl() {
 
     canvas.addEventListener('mousemove', (e) => {
         if (!isDragging) return;
-
-        const deltaX = e.clientX - previousMousePosition.x;
-        const deltaY = e.clientY - previousMousePosition.y;
-
-        cameraAngle -= deltaX * 0.01;
-        cameraHeight = Math.max(5, Math.min(25, cameraHeight - deltaY * 0.1));
-
+        cameraAngle -= (e.clientX - previousMousePosition.x) * 0.01;
+        cameraHeight = Math.max(5, Math.min(25, cameraHeight - (e.clientY - previousMousePosition.y) * 0.1));
         updateCameraPosition();
-
         previousMousePosition = { x: e.clientX, y: e.clientY };
     });
 
-    canvas.addEventListener('mouseup', () => {
-        isDragging = false;
-    });
-
+    canvas.addEventListener('mouseup', () => { isDragging = false; });
     canvas.addEventListener('wheel', (e) => {
         cameraDistance = Math.max(10, Math.min(40, cameraDistance + e.deltaY * 0.05));
         updateCameraPosition();
@@ -337,42 +292,26 @@ function setupCameraControl() {
 }
 
 function updateCameraPosition() {
-    // 相机位置基于玩家位置和角度
     const targetX = playerPosition.x + Math.sin(cameraAngle) * cameraDistance;
     const targetZ = playerPosition.z + Math.cos(cameraAngle) * cameraDistance;
-    const targetY = cameraHeight;
-
-    // 平滑跟随
     smoothCameraPosition.x += (targetX - smoothCameraPosition.x) * 0.1;
     smoothCameraPosition.z += (targetZ - smoothCameraPosition.z) * 0.1;
-    smoothCameraPosition.y += (targetY - smoothCameraPosition.y) * 0.1;
-
-    camera.position.x = smoothCameraPosition.x;
-    camera.position.z = smoothCameraPosition.z;
-    camera.position.y = smoothCameraPosition.y;
-
-    // 相机看向玩家
+    smoothCameraPosition.y += (cameraHeight - smoothCameraPosition.y) * 0.1;
+    camera.position.set(smoothCameraPosition.x, smoothCameraPosition.y, smoothCameraPosition.z);
     camera.lookAt(playerPosition.x, playerPosition.y + 2, playerPosition.z);
 }
 
 // ==================== 玩家控制 ====================
 
-// 键盘状态
-const keys = {
-    w: false,
-    a: false,
-    s: false,
-    d: false
-};
+const keys = { w: false, a: false, s: false, d: false };
 
-// 键盘事件监听
 window.addEventListener('keydown', (e) => {
     const key = e.key.toLowerCase();
     if (key === 'w') keys.w = true;
     if (key === 's') keys.s = true;
     if (key === 'a') keys.a = true;
     if (key === 'd') keys.d = true;
-    if (key === 'e') interact(); // E 键互动
+    if (key === 'e') interact();
 });
 
 window.addEventListener('keyup', (e) => {
@@ -383,45 +322,35 @@ window.addEventListener('keyup', (e) => {
     if (key === 'd') keys.d = false;
 });
 
-// 键盘控制更新
 function updateKeyboardMovement() {
     const speed = 0.5;
     const strafeSpeed = 0.4;
 
     if (keys.w) {
-        // 前进
         playerPosition.x -= Math.sin(playerRotation) * speed;
         playerPosition.z -= Math.cos(playerRotation) * speed;
     }
     if (keys.s) {
-        // 后退
         playerPosition.x += Math.sin(playerRotation) * speed;
         playerPosition.z += Math.cos(playerRotation) * speed;
     }
     if (keys.a) {
-        // 向左平移
         playerPosition.x -= Math.cos(playerRotation) * strafeSpeed;
         playerPosition.z += Math.sin(playerRotation) * strafeSpeed;
     }
     if (keys.d) {
-        // 向右平移
         playerPosition.x += Math.cos(playerRotation) * strafeSpeed;
         playerPosition.z -= Math.sin(playerRotation) * strafeSpeed;
     }
 
-    // 更新玩家位置
     player.position.x = playerPosition.x;
     player.position.z = playerPosition.z;
     player.rotation.y = playerRotation;
-
-    // 更新相机位置（跟随玩家）
     updateCameraPosition();
 
-    // 继续调用
     requestAnimationFrame(updateKeyboardMovement);
 }
 
-// 原有的按钮控制函数（保留）
 function moveForward() {
     const speed = 0.5;
     playerPosition.x -= Math.sin(playerRotation) * speed;
@@ -458,78 +387,30 @@ function strafeRight() {
     updateCameraPosition();
 }
 
-function rotateLeft() {
-    playerRotation += 0.1;
-    player.rotation.y = playerRotation;
-}
-
-function rotateRight() {
-    playerRotation -= 0.1;
-    player.rotation.y = playerRotation;
-}
+function rotateLeft() { playerRotation += 0.1; player.rotation.y = playerRotation; }
+function rotateRight() { playerRotation -= 0.1; player.rotation.y = playerRotation; }
 
 function interact() {
-    // 检测附近的可互动对象
     const interactables = decorations.filter(dec => {
-        const dist = Math.sqrt(
-            Math.pow(dec.position.x - playerPosition.x, 2) +
-            Math.pow(dec.position.z - playerPosition.z, 2)
-        );
+        const dist = Math.sqrt(Math.pow(dec.position.x - playerPosition.x, 2) + Math.pow(dec.position.z - playerPosition.z, 2));
         return dist < 3;
     });
 
     if (interactables.length > 0) {
         showNotification('✨ 发现了有趣的东西！');
-        game3DState.player.coins += 10;
-        updateUI();
+        if (game3DState) {
+            game3DState.player.coins += 10;
+            updateUI();
+        }
     } else {
         showNotification('附近没有什么可以互动的...');
-    }
-}
-
-// ==================== 游戏状态管理 ====================
-
-let game3DState;
-
-class GameState3D {
-    constructor() {
-        this.load();
-    }
-
-    load() {
-        const saved = localStorage.getItem('beibi3dSave');
-        if (saved) {
-            const data = JSON.parse(saved);
-            this.player = data.player || {
-                name: '玩家',
-                gender: 'female',
-                level: 1,
-                exp: 0,
-                coins: 1000,
-                gems: 100
-            };
-        } else {
-            this.player = {
-                name: '玩家',
-                gender: 'female',
-                level: 1,
-                exp: 0,
-                coins: 1000,
-                gems: 100
-            };
-        }
-    }
-
-    save() {
-        localStorage.setItem('beibi3dSave', JSON.stringify({
-            player: this.player
-        }));
     }
 }
 
 // ==================== UI 功能 ====================
 
 function updateUI() {
+    if (!game3DState) return;
     document.getElementById('player-name-display').textContent = game3DState.player.name;
     document.getElementById('player-avatar').textContent = game3DState.player.gender === 'female' ? '👧' : '👦';
     document.getElementById('player-level').textContent = game3DState.player.level;
@@ -540,9 +421,7 @@ function updateUI() {
 
 function updateLoadingProgress(progress) {
     const progressBar = document.getElementById('loading-progress');
-    if (progressBar) {
-        progressBar.style.width = progress + '%';
-    }
+    if (progressBar) progressBar.style.width = progress + '%';
 }
 
 function setGender(gender) {
@@ -557,7 +436,6 @@ function setGender(gender) {
             btn.style.borderColor = '#667eea';
         } else {
             btn.style.background = 'white';
-            btn.style.color = '';
             btn.style.borderColor = '#ddd';
         }
     });
@@ -566,16 +444,15 @@ function setGender(gender) {
 
 function startGame() {
     const name = document.getElementById('player-name').value.trim();
-    if (name) {
-        playerName = name;
-    }
+    if (name) playerName = name;
 
     game3DState = new GameState3D();
     game3DState.player.name = playerName;
     game3DState.player.gender = playerGender;
     game3DState.save();
 
-    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('login-screen').classList.remove('active');
+    document.getElementById('ui-overlay').style.display = 'block';
     updateUI();
 
     showNotification(`🏝️ 欢迎来到贝比岛 3D, ${playerName}!`);
@@ -593,17 +470,14 @@ function openShop() {
 
     let html = '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">';
     items.forEach(item => {
-        html += `
-            <div style="background: #f5f5f5; padding: 15px; border-radius: 10px; text-align: center;">
-                <div style="font-size: 2em;">${item.icon}</div>
-                <div style="font-weight: bold; margin: 5px 0;">${item.name}</div>
-                <div style="color: #f39c12;">💰 ${item.price}</div>
-                <button onclick="buyItem('${item.name}', ${item.price})" style="margin-top: 10px; padding: 5px 15px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">购买</button>
-            </div>
-        `;
+        html += `<div style="background: #f5f5f5; padding: 15px; border-radius: 10px; text-align: center;">
+            <div style="font-size: 2em;">${item.icon}</div>
+            <div style="font-weight: bold; margin: 5px 0;">${item.name}</div>
+            <div style="color: #f39c12;">💰 ${item.price}</div>
+            <button onclick="buyItem('${item.name}', ${item.price})" style="margin-top: 10px; padding: 5px 15px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">购买</button>
+        </div>`;
     });
     html += '</div>';
-
     showModal('🏪 商店', html);
 }
 
@@ -613,76 +487,27 @@ function buyItem(name, price) {
         game3DState.save();
         updateUI();
         showNotification(`✅ 购买了 ${name}!`);
-
-        // 添加装饰物到岛屿
         if (name === '松树') createTree((Math.random() - 0.5) * 40, (Math.random() - 0.5) * 40);
         if (name === '花坛') createFlower((Math.random() - 0.5) * 40, (Math.random() - 0.5) * 40);
         if (name === '装饰石') createRock((Math.random() - 0.5) * 40, (Math.random() - 0.5) * 40);
+        showModal('🏪 商店', '<div style="text-align: center; padding: 20px;">✅ 购买成功！</div>');
     } else {
         showNotification('❌ 金币不足!');
     }
 }
 
-function openBag() {
-    showModal('🎒 背包', '<div style="text-align: center; color: #888;">背包是空的</div>');
-}
-
-function openQuests() {
-    const quests = [
-        { name: '装饰岛屿', desc: '在岛屿上放置 3 个装饰物', reward: 100 },
-        { name: '探索岛屿', desc: '环绕岛屿一周', reward: 50 },
-        { name: '收集金币', desc: '收集 100 金币', reward: 200 }
-    ];
-
-    let html = '<div style="display: flex; flex-direction: column; gap: 15px;">';
-    quests.forEach(quest => {
-        html += `
-            <div style="background: #f5f5f5; padding: 15px; border-radius: 10px;">
-                <div style="font-weight: bold; color: #667eea;">${quest.name}</div>
-                <div style="color: #888; font-size: 0.9em; margin: 5px 0;">${quest.desc}</div>
-                <div style="color: #f39c12;">奖励：💰 ${quest.reward}</div>
-            </div>
-        `;
-    });
-    html += '</div>';
-
-    showModal('📋 任务列表', html);
-}
-
-function openFriends() {
-    const friends = [
-        { name: '小樱', level: 5, online: true },
-        { name: '小明', level: 8, online: false },
-        { name: '美美', level: 3, online: true }
-    ];
-
-    let html = '<div style="display: flex; flex-direction: column; gap: 10px;">';
-    friends.forEach(friend => {
-        html += `
-            <div style="background: #f5f5f5; padding: 15px; border-radius: 10px; display: flex; align-items: center; gap: 15px;">
-                <div style="font-size: 2em;">${friend.online ? '🟢' : '⚪'} 👤</div>
-                <div style="flex: 1;">
-                    <div style="font-weight: bold;">${friend.name}</div>
-                    <div style="color: #888; font-size: 0.9em;">Lv.${friend.level}</div>
-                </div>
-                <button style="padding: 5px 15px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">拜访</button>
-            </div>
-        `;
-    });
-    html += '</div>';
-
-    showModal('👥 好友列表', html);
-}
+function openBag() { showModal('🎒 背包', '<div style="text-align: center; color: #888; padding: 40px;">背包是空的</div>'); }
+function openQuests() { showModal('📋 任务列表', '<div style="text-align: center; color: #888; padding: 40px;">暂无任务</div>'); }
+function openFriends() { showModal('👥 好友列表', '<div style="text-align: center; color: #888; padding: 40px;">暂无好友</div>'); }
 
 function openSettings() {
-    const html = `
+    showModal('⚙️ 设置', `
         <div style="display: flex; flex-direction: column; gap: 15px;">
-            <button onclick="toggleMusic()" style="padding: 15px; background: #f5f5f5; border: none; border-radius: 10px; cursor: pointer; text-align: left;">🎵 背景音乐：开启</button>
-            <button onclick="toggleSound()" style="padding: 15px; background: #f5f5f5; border: none; border-radius: 10px; cursor: pointer; text-align: left;">🔊 音效：开启</button>
-            <button onclick="clearData()" style="padding: 15px; background: #e74c3c; color: white; border: none; border-radius: 10px; cursor: pointer; text-align: left;">🗑️ 清除游戏数据</button>
+            <button onclick="showNotification('🎵 背景音乐已切换')" style="padding: 15px; background: #f5f5f5; border: none; border-radius: 10px; cursor: pointer; text-align: left;">🎵 背景音乐：开启</button>
+            <button onclick="showNotification('🔊 音效已切换')" style="padding: 15px; background: #f5f5f5; border: none; border-radius: 10px; cursor: pointer; text-align: left;">🔊 音效：开启</button>
+            <button onclick="if(confirm('确定清除数据？')) { localStorage.removeItem('beibi3dSave'); location.reload(); }" style="padding: 15px; background: #e74c3c; color: white; border: none; border-radius: 10px; cursor: pointer; text-align: left;">🗑️ 清除游戏数据</button>
         </div>
-    `;
-    showModal('⚙️ 设置', html);
+    `);
 }
 
 function showModal(title, content) {
@@ -703,77 +528,35 @@ function showNotification(message) {
     setTimeout(() => notification.remove(), 3000);
 }
 
-function toggleMusic() {
-    showNotification('🎵 背景音乐已切换');
-}
+// 点击弹窗外部关闭
+document.getElementById('modal-template').addEventListener('click', (e) => {
+    if (e.target.id === 'modal-template') closeModal();
+});
 
-function toggleSound() {
-    showNotification('🔊 音效已切换');
-}
-
-function clearData() {
-    if (confirm('确定要清除所有游戏数据吗？此操作不可恢复！')) {
-        localStorage.removeItem('beibi3dSave');
-        location.reload();
-    }
-}
-
-// ==================== 加载流程 ====================
+// ==================== 页面加载 ====================
 
 window.addEventListener('load', () => {
-    console.log('Page loaded, starting game...');
+    console.log('Page loaded');
 
-    // 检查 Three.js 是否加载成功
     if (typeof THREE === 'undefined') {
-        console.error('Three.js 加载失败！');
-        document.getElementById('loading-screen').innerHTML = `
-            <div style="color: white; text-align: center; padding: 20px;">
-                <h2>❌ Three.js 加载失败</h2>
-                <p>请检查网络连接或使用支持 WebGL 的浏览器</p>
-                <button onclick="location.reload()" style="padding: 10px 20px; margin-top: 20px; cursor: pointer;">重试</button>
-            </div>
-        `;
+        document.getElementById('loading-screen').innerHTML = '<div style="color:white;text-align:center;padding:20px;"><h2>❌ Three.js 加载失败</h2><button onclick="location.reload()" style="padding:10px 20px;margin-top:20px;">重试</button></div>';
         return;
     }
 
-    console.log('Three.js version:', THREE.REVISION);
+    console.log('Three.js:', THREE.REVISION);
+    initThree();
 
-    // 模拟加载
     let progress = 0;
     const loadInterval = setInterval(() => {
         progress += 10;
         updateLoadingProgress(progress);
-
         if (progress >= 100) {
             clearInterval(loadInterval);
             setTimeout(() => {
-                try {
-                    initThree();
-                    setTimeout(() => {
-                        document.getElementById('loading-screen').style.display = 'none';
-                        document.getElementById('login-screen').style.display = 'flex';
-                        console.log('Game started successfully!');
-                    }, 500);
-                } catch (error) {
-                    console.error('初始化 3D 场景失败:', error);
-                    document.getElementById('loading-screen').innerHTML = `
-                        <div style="color: white; text-align: center; padding: 20px;">
-                            <h2>❌ 初始化失败</h2>
-                            <p>${error.message}</p>
-                            <button onclick="location.reload()" style="padding: 10px 20px; margin-top: 20px; cursor: pointer;">重试</button>
-                        </div>
-                    `;
-                }
+                document.getElementById('loading-screen').style.display = 'none';
+                document.getElementById('login-screen').classList.add('active');
+                console.log('Game ready!');
             }, 500);
         }
     }, 200);
 });
-
-// 点击弹窗外部关闭
-document.getElementById('modal-template').addEventListener('click', (e) => {
-    if (e.target.id === 'modal-template') {
-        closeModal();
-    }
-});
-
-console.log('Game script loaded');
