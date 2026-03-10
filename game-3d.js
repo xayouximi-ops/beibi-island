@@ -5,63 +5,19 @@
 
 // ==================== 全局变量 ====================
 
-let scene, camera, renderer, controls;
-let player, island, decorations = [];
+let scene, camera, renderer;
+let player, island;
+let decorations = [];
 let playerGender = 'female';
 let playerName = '玩家';
-let gameState = {
-    level: 1,
-    exp: 0,
-    coins: 1000,
-    gems: 100
-};
-
-// ==================== 游戏状态管理 ====================
-
-class GameState3D {
-    constructor() {
-        this.load();
-    }
-
-    load() {
-        const saved = localStorage.getItem('beibi3dSave');
-        if (saved) {
-            const data = JSON.parse(saved);
-            this.player = data.player || {
-                name: '玩家',
-                gender: 'female',
-                level: 1,
-                exp: 0,
-                coins: 1000,
-                gems: 100
-            };
-            this.island = data.island || { decorations: [] };
-        } else {
-            this.player = {
-                name: '玩家',
-                gender: 'female',
-                level: 1,
-                exp: 0,
-                coins: 1000,
-                gems: 100
-            };
-            this.island = { decorations: [] };
-        }
-    }
-
-    save() {
-        localStorage.setItem('beibi3dSave', JSON.stringify({
-            player: this.player,
-            island: this.island
-        }));
-    }
-}
-
-let game3DState;
+let playerRotation = 0;
+let playerPosition = { x: 0, z: 0 };
 
 // ==================== 初始化 Three.js ====================
 
 function initThree() {
+    console.log('Initializing Three.js...');
+
     // 创建场景
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x87CEEB);
@@ -69,22 +25,16 @@ function initThree() {
 
     // 创建相机
     camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 10, 20);
+    camera.position.set(0, 15, 25);
+    camera.lookAt(0, 0, 0);
 
     // 创建渲染器
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-    // 创建控制器
-    controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    controls.maxPolarAngle = Math.PI / 2 - 0.1;
-    controls.minDistance = 10;
-    controls.maxDistance = 50;
+    console.log('Three.js initialized');
 
     // 添加光源
     addLights();
@@ -101,8 +51,14 @@ function initThree() {
     // 窗口大小调整
     window.addEventListener('resize', onWindowResize);
 
+    // 鼠标控制相机
+    setupCameraControl();
+
     // 开始渲染循环
     animate();
+
+    // 更新加载进度
+    updateLoadingProgress(100);
 }
 
 function addLights() {
@@ -116,20 +72,18 @@ function addLights() {
     directionalLight.castShadow = true;
     directionalLight.shadow.mapSize.width = 2048;
     directionalLight.shadow.mapSize.height = 2048;
-    directionalLight.shadow.camera.near = 0.5;
-    directionalLight.shadow.camera.far = 500;
-    directionalLight.shadow.camera.left = -50;
-    directionalLight.shadow.camera.right = 50;
-    directionalLight.shadow.camera.top = 50;
-    directionalLight.shadow.camera.bottom = -50;
     scene.add(directionalLight);
 
     // 半球光
     const hemisphereLight = new THREE.HemisphereLight(0x87CEEB, 0x98FB98, 0.4);
     scene.add(hemisphereLight);
+
+    console.log('Lights added');
 }
 
 function createIsland() {
+    console.log('Creating island...');
+
     // 创建岛屿地面
     const islandGeometry = new THREE.CylinderGeometry(30, 35, 5, 8);
     const islandMaterial = new THREE.MeshStandardMaterial({
@@ -164,9 +118,13 @@ function createIsland() {
     ocean.rotation.x = -Math.PI / 2;
     ocean.position.y = -3;
     scene.add(ocean);
+
+    console.log('Island created');
 }
 
 function createPlayer() {
+    console.log('Creating player...');
+
     // 创建简化的 3D 玩家角色
     const playerGroup = new THREE.Group();
 
@@ -199,11 +157,15 @@ function createPlayer() {
     playerGroup.add(rightEye);
 
     player = playerGroup;
-    player.position.y = 0;
+    player.position.set(0, 0, 0);
     scene.add(player);
+
+    console.log('Player created at position:', player.position);
 }
 
 function createDecorations() {
+    console.log('Creating decorations...');
+
     // 创建树木
     for (let i = 0; i < 5; i++) {
         createTree(
@@ -227,6 +189,8 @@ function createDecorations() {
             (Math.random() - 0.5) * 50
         );
     }
+
+    console.log('Decorations created, count:', decorations.length);
 }
 
 function createTree(x, z) {
@@ -296,14 +260,59 @@ function onWindowResize() {
 
 function animate() {
     requestAnimationFrame(animate);
-    controls.update();
     renderer.render(scene, camera);
 }
 
-// ==================== 玩家控制 ====================
+// ==================== 相机控制 ====================
 
-let playerRotation = 0;
-let playerPosition = { x: 0, z: 0 };
+let isDragging = false;
+let previousMousePosition = { x: 0, y: 0 };
+let cameraAngle = 0;
+let cameraDistance = 30;
+let cameraHeight = 15;
+
+function setupCameraControl() {
+    const canvas = renderer.domElement;
+
+    canvas.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        previousMousePosition = { x: e.clientX, y: e.clientY };
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+
+        const deltaX = e.clientX - previousMousePosition.x;
+        const deltaY = e.clientY - previousMousePosition.y;
+
+        cameraAngle -= deltaX * 0.01;
+        cameraHeight = Math.max(5, Math.min(30, cameraHeight - deltaY * 0.1));
+
+        updateCameraPosition();
+
+        previousMousePosition = { x: e.clientX, y: e.clientY };
+    });
+
+    canvas.addEventListener('mouseup', () => {
+        isDragging = false;
+    });
+
+    canvas.addEventListener('wheel', (e) => {
+        cameraDistance = Math.max(10, Math.min(50, cameraDistance + e.deltaY * 0.05));
+        updateCameraPosition();
+    });
+
+    updateCameraPosition();
+}
+
+function updateCameraPosition() {
+    camera.position.x = Math.sin(cameraAngle) * cameraDistance;
+    camera.position.z = Math.cos(cameraAngle) * cameraDistance;
+    camera.position.y = cameraHeight;
+    camera.lookAt(0, 0, 0);
+}
+
+// ==================== 玩家控制 ====================
 
 function moveForward() {
     const speed = 0.5;
@@ -311,6 +320,7 @@ function moveForward() {
     playerPosition.z -= Math.cos(playerRotation) * speed;
     player.position.x = playerPosition.x;
     player.position.z = playerPosition.z;
+    updateCameraPosition();
 }
 
 function moveBackward() {
@@ -319,6 +329,7 @@ function moveBackward() {
     playerPosition.z += Math.cos(playerRotation) * speed;
     player.position.x = playerPosition.x;
     player.position.z = playerPosition.z;
+    updateCameraPosition();
 }
 
 function rotateLeft() {
@@ -350,6 +361,46 @@ function interact() {
     }
 }
 
+// ==================== 游戏状态管理 ====================
+
+let game3DState;
+
+class GameState3D {
+    constructor() {
+        this.load();
+    }
+
+    load() {
+        const saved = localStorage.getItem('beibi3dSave');
+        if (saved) {
+            const data = JSON.parse(saved);
+            this.player = data.player || {
+                name: '玩家',
+                gender: 'female',
+                level: 1,
+                exp: 0,
+                coins: 1000,
+                gems: 100
+            };
+        } else {
+            this.player = {
+                name: '玩家',
+                gender: 'female',
+                level: 1,
+                exp: 0,
+                coins: 1000,
+                gems: 100
+            };
+        }
+    }
+
+    save() {
+        localStorage.setItem('beibi3dSave', JSON.stringify({
+            player: this.player
+        }));
+    }
+}
+
 // ==================== UI 功能 ====================
 
 function updateUI() {
@@ -359,6 +410,13 @@ function updateUI() {
     document.getElementById('coin-display').textContent = game3DState.player.coins;
     document.getElementById('gem-display').textContent = game3DState.player.gems;
     document.getElementById('exp-display').textContent = game3DState.player.exp;
+}
+
+function updateLoadingProgress(progress) {
+    const progressBar = document.getElementById('loading-progress');
+    if (progressBar) {
+        progressBar.style.width = progress + '%';
+    }
 }
 
 function setGender(gender) {
@@ -537,20 +595,22 @@ function clearData() {
 // ==================== 加载流程 ====================
 
 window.addEventListener('load', () => {
+    console.log('Page loaded, starting game...');
+
     // 模拟加载
     let progress = 0;
-    const progressBar = document.getElementById('loading-progress');
-
     const loadInterval = setInterval(() => {
         progress += 10;
-        progressBar.style.width = progress + '%';
+        updateLoadingProgress(progress);
 
         if (progress >= 100) {
             clearInterval(loadInterval);
             setTimeout(() => {
-                document.getElementById('loading-screen').style.display = 'none';
-                document.getElementById('login-screen').style.display = 'flex';
                 initThree();
+                setTimeout(() => {
+                    document.getElementById('loading-screen').style.display = 'none';
+                    document.getElementById('login-screen').style.display = 'flex';
+                }, 500);
             }, 500);
         }
     }, 200);
@@ -562,3 +622,5 @@ document.getElementById('modal-template').addEventListener('click', (e) => {
         closeModal();
     }
 });
+
+console.log('Game script loaded');
